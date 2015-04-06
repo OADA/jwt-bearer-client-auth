@@ -1,0 +1,45 @@
+{
+  "name": "jwt-bearer-client-auth",
+  "version": "0.0.0",
+  "description": "Create and verify JWT bearer client assertions from the oauth-jwt-bearer RFC",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha -w",
+    "cover": "istanbul cover _mocha",
+    "lint": "jshint --reporter node_modules/jshint-stylish/stylish.js .",
+    "style": "jscs .",
+    "clean": "rm -rf ./coverage"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OADA/jwt-bearer-client-auth.git"
+  },
+  "keywords": [
+    "jwt",
+    "client assertion",
+    "oauth",
+    "oauth 2.0",
+    "draft-ietf-oauth-jwt-bearer",
+    "oauth-jwt-bearer"
+  ],
+  "author": {
+    "name": "Andrew Balmos",
+    "email": "andrew@balmos.org"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/OADA/jwt-bearer-client-auth/issues"
+  },
+  "homepage": "https://github.com/OADA/jwt-bearer-client-auth",
+  "devDependencies": {
+    "chai": "^2.2.0",
+    "istanbul": "^0.3.13",
+    "jscs": "^1.12.0",
+    "jshint": "^2.6.3",
+    "jshint-stylish": "^1.0.1",
+    "mocha": "^2.2.1"
+  }
+}

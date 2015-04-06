@@ -1,0 +1,31 @@
+language: node_js
+node_js:
+- '0.10'
+- '0.11'
+- '0.12'
+- node
+- iojs
+env:
+- TEST=cover
+
+sudo: false
+before_deploy:
+- npm install -g npm
+deploy:
+  provider: npm
+  email: andrew@balmos.org
+  api_key:
+    secure: pOq0EKlQ6HmizzFskqnZAttuj65dkEMpM91liR7lV22VaxeDMHKEhelF88UtdUL2Ph2u3AIV+4r4PkmmyzfjukFLMNNEws2iBLiuvsGD0sDudhyO0e/YOoAAjC+jhnUF15oD+yIZN5XjaBa9y5sg5Do4YxdTIQUNGd9nnsOXn90=
+  on:
+    node: node
+    tags: true
+    all_branches: true
+    repo: OADA/jwt-bearer-client-auth
+before_install:
+- npm install -g coveralls
+script:
+- npm run lint
+- npm run style
+- npm run $TEST
+after_success:
+- cat ./coverage/lcov.info | coveralls --verbose
