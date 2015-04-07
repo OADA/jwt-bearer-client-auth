@@ -2,7 +2,7 @@
   "name": "jwt-bearer-client-auth",
   "version": "0.0.0",
   "description": "Create and verify JWT bearer client assertions from the oauth-jwt-bearer RFC",
-  "main": "index.js",
+  "main": "jwt-bearer-client-auth.js",
   "scripts": {
     "test": "mocha -w",
     "cover": "istanbul cover _mocha",
@@ -40,6 +40,11 @@
     "jscs": "^1.12.0",
     "jshint": "^2.6.3",
     "jshint-stylish": "^1.0.1",
+    "jws": "^2.0.0",
     "mocha": "^2.2.1"
+  },
+  "dependencies": {
+    "object-assign": "~2.0.0",
+    "jsonwebtoken": "~4.2.2"
   }
 }
