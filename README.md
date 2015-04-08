@@ -5,7 +5,7 @@
 
 # jwt-bearer-client-auth #
 
-Create and verify RS256 based JWT oauth-jwt-beaeer client authentications.
+Create and verify RS256 based JWT oauth-jwt-bearer client authentications.
 
 ## Installation ##
 ```shell
@@ -20,8 +20,8 @@ var clientAuth = require('jwt-bearer-client-auth');
 ## API ##
 
 ### generate(key, issuer, clientId, tokenEndpoint, expiresIn, options) ###
-Generate a valid jwt-bearer-client-auth client assertion from client details and
-the client's private RSA256 key.
+Generate a valid [jwt-bearer][jwt-bearer] client assertion from client details and the
+client's private RSA256 key.
 
 #### Parameters ####
 `key` *{PEM JWK}* The key used to sign the assertion. Currentlt the only
@@ -43,7 +43,7 @@ assertion expires.
 
 `options` *{Object}* The `options` parameter is passed directly to
 [node-jsonwebtoken][auth0/node-jsonwebtoken]. This module will not allow the
-caller  to override the properties required by the jwt-bearer-client-auth RFC.
+caller  to override the properties required by the [jwt-bearer][jwt-bearer] RFC.
 You can add properties to the header and claim set with the following
 sub-objects:
 
@@ -54,7 +54,7 @@ sub-objects:
 
 #### Usage Example ####
 ```javascript
-// Generate a jwt-bearer-client-auth client assertion
+// Generate a jwt-bearer client assertion
 var fs = require('fs');
 
 var key = {
@@ -76,22 +76,68 @@ var assertion = clientAuth.generate(key, issuer, clientId, tokenEndpoint,
   expiresIn, options);
 ```
 
-### verify(assertion) ###
-*Still under development.* Verify the given `assertion` is a valid
-jwt-bearer-client-auth client assertion.
+### verify(token, hint, issuer, clientId, tokenEndpoint, options, [cb]) ###
+Verify the given `assertion` is a valid [jwt-bearer][jwt-bearer] client
+assertion.
+
+#### Returned Value ####
+A payload promise is returned, but a traditional `function(err, valid)` callback
+is also supported.
 
 #### Parameters ####
-`assertion` the jwt-bearer-auth client assertion in question.
+`token` *{JWT}* The token which is being verified as a valid jwt-bearer client
+assertion.
+
+`hint` *{JWK/JWKS/JWK URI/false}* This is passed directly to the
+[jwks-utils][jwks-utils] `jwkForSignature` method. It can be:
+  - The JWK for the token
+  - A JWKS which the tokens JWK is stored in (by key id, `kid`)
+  - A URI for a JWKS which the tokens JWK is stored in (by key id, `kid`)
+  - Or, `false`, indicating that the key is stored within the token's header
+    under either the `jwk` or `jku` property (note this can be easily be
+    spoofed and the key should be verfied by other means before trusting it).
+
+`issuer` *{String}* An "unique identifier for the entity that issued the JWT." A
+good choice for a client generating assertions on-the-fly might be the client's
+OAuth 2.0 client ID.
+
+`clientId` *{String}* The client's OAuth 2.0 client ID. It is the required value
+for the JWT's `sub` claim.
+
+`tokenEndpoint` *{String}* The OAuth 2.0 authorization server's token endpoint.
+It is the required value for the JWT's `aud` claim.
+
+`options` *{Object}* The `options` parameter is used to customize the
+verification of the client assertion. The properties of this object are:
+  * `payload` *{Object}* Extra payload claims (and acceptable values) the caller
+    is requiring to be included in the token in order to verify the assertion.
+
+`cb` *{Function}* The `cb(err, payload)` function can be used instead of the
+returned promise in the typical node fashion.
 
 #### Usage Example ####
 ```javascript
 // Verify a jwt-bearer-client-auth client assertion
-if(clientAuth.verify(assertion), function(err, valid) {
-  if(valid) {
-    // Approve OAuth 2.0 request
-  }
+var assertion = getClientAssertion();
+var key = getPublicKey();
+var issuer = getIssuer();
+var clientId = getClientId();
+var tokenEndpoint = getTokenEndpoint();
+var options = {
+  jti: 'xjkaf3xz'
+};
+
+clientAuth
+  .verify(assertion, key, issuer, clientId, tokenEndpoint, options)
+  .then(function(payload) {
+    console.log('Client assertion validated');
+  })
+  .catch(function(err) {
+    console.log('Client assertion was not validated, because: ' + err);
+  });
 })
 ```
 
-[jwt-bearer-client-auth]:
+[jwt-bearer]: https://tools.ietf.org/id/draft-ietf-oauth-jwt-bearer.txt
 [node-jsonwebtoken]: https://github.com/auth0/node-jsonwebtoken
+[jwks-utils]: https://github.com/oada/node-jwks-utils
