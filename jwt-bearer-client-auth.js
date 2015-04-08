@@ -15,7 +15,10 @@
 'use strict';
 
 var objectAssign = require('object-assign');
-var jwt = require('jsonwebtoken');
+var Promise = require('bluebird');
+var jwt = Promise.promisifyAll(require('jsonwebtoken'));
+var jwks = Promise.promisifyAll(require('jwks-utils'));
+var pem = require('rsa-pem-from-mod-exp');
 
 function generate(key, issuer, clientId, tokenEndpoint, expiresIn, options) {
     // Ensure the required claims are present
@@ -52,8 +55,56 @@ function generate(key, issuer, clientId, tokenEndpoint, expiresIn, options) {
     return jwt.sign(options.payload, key.pem, options);
 }
 
-function verify() {
+function verify(token, hint, issuer, clientId, tokenEndpoint, options, cb) {
+    options = options || {};
 
+    return jwks.jwkForSignatureAsync(token, hint).then(function(jwk) {
+        var key;
+
+        switch (jwk.kty) {
+            case 'RSA':
+                key = pem(jwk.n, jwk.e);
+            break;
+
+            default:
+                throw new Error('Unsupported key type: ' + jwk.kty);
+        }
+
+        var verifyOpts = {
+            issuer: issuer,
+            audience: tokenEndpoint
+        };
+
+        return jwt.verifyAsync(token, key, verifyOpts).then(function(payload) {
+            // Verify the exp is present (jwt verified it's value if it is)
+            if (!payload.exp) {
+                throw new Error('exp claim is required');
+            }
+
+            // Check required sub key
+            if (payload.sub !== clientId) {
+                throw new Error('sub claim is inconsistent with clientId');
+            }
+
+            // Check for optional not before property
+            if (payload.nbf && Math.floor(Date.now() / 1000) <= payload.nbf) {
+                throw new Error('nbf claim violated');
+            }
+
+            // Check for any other user required claims
+            if (typeof options.payload === 'object') {
+                var keys = Object.keys(options.payload);
+
+                for (var i = 0; i < keys.length; i++) {
+                    if (payload[keys[i]] !== options.payload[keys[i]]) {
+                        throw new Error(keys[i] + ' claim is inconsistent');
+                    }
+                }
+            }
+
+            return payload;
+        });
+    }).nodeify(cb);
 }
 
 module.exports.generate = generate;

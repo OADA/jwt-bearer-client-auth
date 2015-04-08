@@ -15,10 +15,14 @@
 
 'use strict';
 
+var chai = require('chai');
+chai.use(require('chai-as-promised'));
+var expect = chai.expect;
+
 var fs = require('fs');
-var expect = require('chai').expect;
 var jws = require('jws');
 var jwt = require('jsonwebtoken');
+var rsaPemToJwk = require('rsa-pem-to-jwk');
 var clientAuth = require('../');
 
 describe('exports', function() {
@@ -32,6 +36,7 @@ describe('exports', function() {
 describe('generate', function() {
     var privatePem;
     var publicPem;
+    var publicJwk;
     var expiresIn;
     var issuer;
     var clientId;
@@ -53,17 +58,17 @@ describe('generate', function() {
     }
 
     beforeEach(function() {
-        expiresIn = 123;
-        issuer = 'fJd7s723qa';
-        clientId = 'xi7sca3';
-        tokenEndpoint = 'https://example.org/token';
         privatePem = {
             kid: 'abc123',
             kty: 'PEM',
             pem: fs.readFileSync('test/keys/abc123.private.pem')
         };
-
         publicPem = fs.readFileSync('test/keys/abc123.public.pem');
+        publicJwk = rsaPemToJwk(publicPem, {kid: 'abc123'});
+        expiresIn = 123;
+        issuer = 'fJd7s723qa';
+        clientId = 'xi7sca3';
+        tokenEndpoint = 'https://example.org/token';
     });
 
     it('should require object for key', function() {
@@ -166,4 +171,177 @@ describe('generate', function() {
             done();
         });
     });
+});
+
+describe('verify', function() {
+    var privatePem = {
+        kid: 'abc123',
+        kty: 'PEM',
+        pem: fs.readFileSync('test/keys/abc123.private.pem')
+    };
+    var publicPem = fs.readFileSync('test/keys/abc123.public.pem');
+    var publicJwk = rsaPemToJwk(publicPem, {kid: 'abc123'});
+    var options;
+
+    beforeEach(function() {
+        options = {
+            algorithm: 'RS256',
+            issuer: 'Xjsi3f93',
+            subject: 'vmaAU93F',
+            audience: 'https://api.example.org/token',
+            expiresInSeconds: 10,
+            headers: {
+                kid: privatePem.kid
+            }
+        };
+    });
+
+    it('should verify a valid token', function() {
+        var token = jwt.sign({}, privatePem.pem, options);
+
+        var valid = clientAuth
+            .verify(token,
+                    publicJwk,
+                    options.issuer,
+                    options.subject,
+                    options.audience);
+
+        expect(valid).to.eventually.be.ok;
+    });
+
+    it('should require the exp claim', function() {
+        delete options.expiresInSeconds;
+        var token = jwt.sign({}, privatePem.pem, options);
+
+        var valid = clientAuth
+            .verify(token,
+                    publicJwk,
+                    options.issuer,
+                    options.subject,
+                    options.audience);
+
+        expect(valid).to.eventually.be.rejected;
+    });
+
+    it('should require consistent issuer', function() {
+        var token = jwt.sign({}, privatePem.pem, options);
+
+        var valid = clientAuth
+            .verify(token,
+                    publicJwk,
+                    options.issuer + 'extra',
+                    options.subject,
+                    options.audience);
+
+        expect(valid).to.eventually.be.rejected;
+    });
+
+    it('should require consistent subject', function() {
+        var token = jwt.sign({}, privatePem.pem, options);
+
+        var valid = clientAuth
+            .verify(token,
+                    publicJwk,
+                    options.issuer,
+                    options.subject + 'extra',
+                    options.audience);
+
+        expect(valid).to.eventually.be.rejected;
+    });
+
+    it('should require consistent audience', function() {
+        var token = jwt.sign({}, privatePem.pem, options);
+
+        var valid = clientAuth
+            .verify(token,
+                    publicJwk,
+                    options.issuer,
+                    options.subject,
+                    options.audience + 'extra');
+
+        expect(valid).to.eventually.be.rejected;
+    });
+
+    it('should enfore not before (nbf) claim', function() {
+        var claims = {
+            nbf: Math.floor((Date.now() + 10000) / 1000)
+        };
+
+        var token = jwt.sign(claims, privatePem.pem, options);
+
+        var valid = clientAuth
+            .verify(token,
+                    publicJwk,
+                    options.issuer,
+                    options.subject,
+                    options.audience);
+
+        expect(valid).to.eventually.be.rejected;
+    });
+
+    it('should verify external claims', function() {
+        var claims = {
+            jti: '1234asdf'
+        };
+
+        var token = jwt.sign(claims, privatePem.pem, options);
+
+        var valid = clientAuth
+            .verify(token,
+                    publicJwk,
+                    options.issuer,
+                    options.subject,
+                    options.audience,
+                    {payload: claims});
+
+        expect(valid).to.eventually.be.ok;
+    });
+
+    it('should require consistent external claims', function() {
+        var claims = {
+            jti: '1234asdf'
+        };
+
+        var token = jwt.sign(claims, privatePem.pem, options);
+
+        claims.jti += 'extra';
+        var valid = clientAuth
+            .verify(token,
+                    publicJwk,
+                    options.issuer,
+                    options.subject,
+                    options.audience,
+                    {payload: claims});
+
+        expect(valid).to.eventually.be.rejected;
+    });
+
+    it('should fail if key type not supported', function() {
+        var token = jwt.sign({}, privatePem.pem, options);
+
+        publicJwk.kty = '[Unknown]';
+        var valid = clientAuth
+            .verify(token,
+                    publicJwk,
+                    options.issuer,
+                    options.subject,
+                    options.audience + 'extra');
+
+        expect(valid).to.eventually.be.rejected;
+    });
+
+    it('should fail if key type not supported', function() {
+        var token = jwt.sign({}, privatePem.pem, options);
+
+        publicJwk.kty = '[Unknown]';
+        var valid = clientAuth
+            .verify(token,
+                    publicJwk,
+                    options.issuer,
+                    options.subject,
+                    options.audience + 'extra');
+
+        expect(valid).to.eventually.be.rejected;
+    });
+
 });
