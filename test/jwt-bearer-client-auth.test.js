@@ -206,7 +206,7 @@ describe('verify', function() {
                     options.subject,
                     options.audience);
 
-        expect(valid).to.eventually.be.ok;
+        return expect(valid).to.eventually.be.ok;
     });
 
     it('should require the exp claim', function() {
@@ -220,7 +220,7 @@ describe('verify', function() {
                     options.subject,
                     options.audience);
 
-        expect(valid).to.eventually.be.rejected;
+        return expect(valid).to.eventually.be.rejected;
     });
 
     it('should require consistent issuer', function() {
@@ -233,7 +233,7 @@ describe('verify', function() {
                     options.subject,
                     options.audience);
 
-        expect(valid).to.eventually.be.rejected;
+        return expect(valid).to.eventually.be.rejected;
     });
 
     it('should require consistent subject', function() {
@@ -246,7 +246,7 @@ describe('verify', function() {
                     options.subject + 'extra',
                     options.audience);
 
-        expect(valid).to.eventually.be.rejected;
+        return expect(valid).to.eventually.be.rejected;
     });
 
     it('should require consistent audience', function() {
@@ -259,7 +259,7 @@ describe('verify', function() {
                     options.subject,
                     options.audience + 'extra');
 
-        expect(valid).to.eventually.be.rejected;
+        return expect(valid).to.eventually.be.rejected;
     });
 
     it('should enfore not before (nbf) claim', function() {
@@ -276,7 +276,7 @@ describe('verify', function() {
                     options.subject,
                     options.audience);
 
-        expect(valid).to.eventually.be.rejected;
+        return expect(valid).to.eventually.be.rejected;
     });
 
     it('should verify external claims', function() {
@@ -294,7 +294,7 @@ describe('verify', function() {
                     options.audience,
                     {payload: claims});
 
-        expect(valid).to.eventually.be.ok;
+        return expect(valid).to.eventually.be.ok;
     });
 
     it('should require consistent external claims', function() {
@@ -313,7 +313,7 @@ describe('verify', function() {
                     options.audience,
                     {payload: claims});
 
-        expect(valid).to.eventually.be.rejected;
+        return expect(valid).to.eventually.be.rejected;
     });
 
     it('should fail if key type not supported', function() {
@@ -327,7 +327,7 @@ describe('verify', function() {
                     options.subject,
                     options.audience + 'extra');
 
-        expect(valid).to.eventually.be.rejected;
+        return expect(valid).to.eventually.be.rejected;
     });
 
     it('should fail if key type not supported', function() {
@@ -341,7 +341,7 @@ describe('verify', function() {
                     options.subject,
                     options.audience + 'extra');
 
-        expect(valid).to.eventually.be.rejected;
+        return expect(valid).to.eventually.be.rejected;
     });
 
 });
