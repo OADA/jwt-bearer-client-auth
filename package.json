@@ -5,7 +5,9 @@
   "main": "jwt-bearer-client-auth.js",
   "scripts": {
     "test": "mocha -w",
+    "browser-test": "./node_modules/karma/bin/karma start --single-run",
     "cover": "istanbul cover _mocha",
+    "browser-cover": "./node_modules/karma/bin/karma start --single-run --cover",
     "lint": "jshint --reporter node_modules/jshint-stylish/stylish.js .",
     "style": "jscs .",
     "clean": "rm -rf ./coverage"
@@ -34,7 +36,16 @@
     "url": "https://github.com/OADA/jwt-bearer-client-auth/issues"
   },
   "homepage": "https://github.com/OADA/jwt-bearer-client-auth",
+  "dependencies": {
+    "object-assign": "~2.0.0",
+    "jsonwebtoken": "~4.2.2",
+    "bluebird": "~2.9.24",
+    "rsa-pem-from-mod-exp": "~0.8.4",
+    "jwks-utils": "~1.0.2"
+  },
   "devDependencies": {
+    "brfs": "^1.4.0",
+    "browserify-istanbul": "^0.2.1",
     "chai": "^2.2.0",
     "chai-as-promised": "^4.3.0",
     "istanbul": "^0.3.13",
@@ -42,14 +53,15 @@
     "jshint": "^2.6.3",
     "jshint-stylish": "^1.0.1",
     "jws": "^2.0.0",
-    "mocha": "^2.2.3",
-    "rsa-pem-to-jwk": "^1.1.3"
-  },
-  "dependencies": {
-    "object-assign": "~2.0.0",
-    "jsonwebtoken": "~4.2.2",
-    "bluebird": "~2.9.24",
-    "rsa-pem-from-mod-exp": "~0.8.4",
-    "jwks-utils": "~1.0.2"
+    "karma": "^0.12.31",
+    "karma-browserify": "^4.1.2",
+    "karma-coverage": "^0.2.6",
+    "karma-mocha": "^0.1.10",
+    "karma-mocha-reporter": "^1.0.2",
+    "karma-phantomjs-launcher": "^0.1.4",
+    "karma-phantomjs-shim": "^1.0.0",
+    "mocha": "^2.2.4",
+    "rsa-pem-to-jwk": "^1.1.3",
+    "yargs": "^3.7.0"
   }
 }

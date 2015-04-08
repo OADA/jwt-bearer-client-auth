@@ -16,6 +16,7 @@
 
 var objectAssign = require('object-assign');
 var Promise = require('bluebird');
+Promise.longStackTraces();
 var jwt = Promise.promisifyAll(require('jsonwebtoken'));
 var jwks = Promise.promisifyAll(require('jwks-utils'));
 var pem = require('rsa-pem-from-mod-exp');
