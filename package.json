@@ -1,6 +1,6 @@
 {
   "name": "jwt-bearer-client-auth",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Create and verify JWT bearer client assertions from the oauth-jwt-bearer RFC",
   "main": "jwt-bearer-client-auth.js",
   "scripts": {
