@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 'use strict';
 
 var objectAssign = require('object-assign');
@@ -19,11 +20,11 @@ var Promise = require('bluebird');
 Promise.longStackTraces();
 var jwt = Promise.promisifyAll(require('jsonwebtoken'));
 var jwks = Promise.promisifyAll(require('jwks-utils'));
-var pem = require('rsa-pem-from-mod-exp');
+var jwk2pem = require('pem-jwk').jwk2pem;
 
 function generate(key, issuer, clientId, tokenEndpoint, expiresIn, options) {
     // Ensure the required claims are present
-    if (typeof key !== 'object' || key.kty !== 'PEM' ||
+    if (!jwks.isJWK(key) ||
         typeof issuer !== 'string' ||
         typeof clientId !== 'string' ||
         typeof tokenEndpoint !== 'string' ||
@@ -53,23 +54,16 @@ function generate(key, issuer, clientId, tokenEndpoint, expiresIn, options) {
         });
     }
 
-    return jwt.sign(options.payload, key.pem, options);
+    var pem = key.kty === 'PEM' ? key.pem : jwk2pem(key);
+
+    return jwt.sign(options.payload, pem, options);
 }
 
 function verify(token, hint, issuer, clientId, tokenEndpoint, options, cb) {
     options = options || {};
 
     return jwks.jwkForSignatureAsync(token, hint).then(function(jwk) {
-        var key;
-
-        switch (jwk.kty) {
-            case 'RSA':
-                key = pem(jwk.n, jwk.e);
-            break;
-
-            default:
-                throw new Error('Unsupported key type: ' + jwk.kty);
-        }
+        var key = jwk.kty === 'PEM' ? jwk.pem : jwk2pem(jwk);
 
         var verifyOpts = {
             issuer: issuer,

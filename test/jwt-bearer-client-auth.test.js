@@ -22,19 +22,13 @@ var expect = chai.expect;
 var fs = require('fs');
 var jws = require('jws');
 var jwt = require('jsonwebtoken');
-var rsaPemToJwk = require('rsa-pem-to-jwk');
-var clientAuth = require('../');
+var pem2jwk = require('pem-jwk').pem2jwk;
 
-describe('exports', function() {
-    ['generate', 'verify'].forEach(function(method) {
-        it('should export ' + method, function() {
-            expect(clientAuth[method]).to.be.a('function');
-        });
-    });
-});
+var clientAuth = require('../');
 
 describe('generate', function() {
     var privatePem;
+    var privateJwk;
     var publicPem;
     var publicJwk;
     var expiresIn;
@@ -50,7 +44,7 @@ describe('generate', function() {
         expect(decoded.payload.sub).to.equal(clientId);
         expect(decoded.payload.aud).to.equal(tokenEndpoint);
 
-        jwt.verify(token, publicPem.toString(), function(err) {
+        jwt.verify(token, publicPem.pem, function(err) {
             expect(err).to.not.be.ok;
 
             cb(decoded);
@@ -63,8 +57,15 @@ describe('generate', function() {
             kty: 'PEM',
             pem: fs.readFileSync('test/keys/abc123.private.pem')
         };
-        publicPem = fs.readFileSync('test/keys/abc123.public.pem');
-        publicJwk = rsaPemToJwk(publicPem, {kid: 'abc123'});
+        privateJwk = pem2jwk(privatePem.pem);
+        privateJwk.kid = 'abc123';
+        publicPem = {
+            kid: 'abc123',
+            kty: 'PEM',
+            pem: fs.readFileSync('test/keys/abc123.public.pem')
+        };
+        publicJwk = pem2jwk(publicPem.pem);
+        publicJwk.kid = 'abc123';
         expiresIn = 123;
         issuer = 'fJd7s723qa';
         clientId = 'xi7sca3';
@@ -77,8 +78,26 @@ describe('generate', function() {
         expect(token).to.equal(undefined);
     });
 
-    it('should require a PEM key', function() {
-        var token = clientAuth.generate({kty: 'RSA'});
+    it('should work with a PEM jwk', function(done) {
+        var token = clientAuth.generate(privatePem, issuer, clientId,
+            tokenEndpoint, expiresIn);
+
+        return checkToken(token, function() {
+            done();
+        });
+    });
+
+    it('should work with an RSA jwk', function(done) {
+        var token = clientAuth.generate(privateJwk, issuer, clientId,
+            tokenEndpoint, expiresIn);
+
+        return checkToken(token, function() {
+            done();
+        });
+    });
+
+    it('should fail if key type not supported', function() {
+        var token = clientAuth.generate({kty: '[Uknown]'});
 
         expect(token).to.equal(undefined);
     });
@@ -159,7 +178,7 @@ describe('generate', function() {
         });
     });
 
-    it('should allow a signing key with an id', function(done) {
+    it('should allow a signing key without an id', function(done) {
         delete privatePem.kid;
 
         var token = clientAuth.generate(privatePem, issuer, clientId,
@@ -179,8 +198,13 @@ describe('verify', function() {
         kty: 'PEM',
         pem: fs.readFileSync('test/keys/abc123.private.pem')
     };
-    var publicPem = fs.readFileSync('test/keys/abc123.public.pem');
-    var publicJwk = rsaPemToJwk(publicPem, {kid: 'abc123'});
+    var publicPem = {
+        kid: 'abc123',
+        kty: 'PEM',
+        pem: fs.readFileSync('test/keys/abc123.public.pem')
+    };
+    var publicJwk = pem2jwk(publicPem.pem);
+    publicJwk.kid = 'abc123';
     var options;
 
     beforeEach(function() {
@@ -197,6 +221,32 @@ describe('verify', function() {
     });
 
     it('should verify a valid token', function() {
+        var token = jwt.sign({}, privatePem.pem, options);
+
+        var valid = clientAuth
+            .verify(token,
+                    publicJwk,
+                    options.issuer,
+                    options.subject,
+                    options.audience);
+
+        return expect(valid).to.eventually.be.ok;
+    });
+
+    it('should work with a PEM jwk', function() {
+        var token = jwt.sign({}, privatePem.pem, options);
+
+        var valid = clientAuth
+            .verify(token,
+                    publicPem,
+                    options.issuer,
+                    options.subject,
+                    options.audience);
+
+        return expect(valid).to.eventually.be.ok;
+    });
+
+    it('should work with an RSA jwk', function() {
         var token = jwt.sign({}, privatePem.pem, options);
 
         var valid = clientAuth
@@ -329,19 +379,4 @@ describe('verify', function() {
 
         return expect(valid).to.eventually.be.rejected;
     });
-
-    it('should fail if key type not supported', function() {
-        var token = jwt.sign({}, privatePem.pem, options);
-
-        publicJwk.kty = '[Unknown]';
-        var valid = clientAuth
-            .verify(token,
-                    publicJwk,
-                    options.issuer,
-                    options.subject,
-                    options.audience + 'extra');
-
-        return expect(valid).to.eventually.be.rejected;
-    });
-
 });
