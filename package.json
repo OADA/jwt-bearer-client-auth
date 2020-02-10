@@ -8,8 +8,6 @@
     "browser-test": "./node_modules/karma/bin/karma start --browsers Firefox --single-run",
     "cover": "istanbul cover _mocha",
     "browser-cover": "./node_modules/karma/bin/karma start --browsers Firefox --single-run --cover",
-    "lint": "jshint --reporter node_modules/jshint-stylish .",
-    "style": "jscs .",
     "clean": "rm -rf ./coverage"
   },
   "pre-commit": [
@@ -55,9 +53,6 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "istanbul": "^0.4.5",
-    "jscs": "^3.0.7",
-    "jshint": "^2.8.0",
-    "jshint-stylish": "^2.0.1",
     "jws": "^4.0.0",
     "karma": "^4.4.1",
     "karma-browserify": "^7.0.0",
@@ -70,6 +65,8 @@
     "mocha": "^7.0.1",
     "phantomjs": "^2.1.7",
     "pre-commit": "^1.1.1",
+    "prettier-standard": "^16.1.0",
+    "standard": "^14.3.1",
     "superagent": "^5.2.1",
     "yargs": "^15.1.0"
   }

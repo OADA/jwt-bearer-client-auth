@@ -13,58 +13,55 @@
  * limitations under the License.
  */
 
-'use strict';
+'use strict'
 
-var args = require('yargs').argv;
+var args = require('yargs').argv
 
-module.exports = function(config) {
-    var reporters = ['mocha'];
-    var transforms = ['brfs'];
+module.exports = function (config) {
+  var reporters = ['mocha']
+  var transforms = ['brfs']
 
-    if (args.cover) {
-        reporters.push('coverage');
-        transforms.push('browserify-istanbul');
-    }
+  if (args.cover) {
+    reporters.push('coverage')
+    transforms.push('browserify-istanbul')
+  }
 
-    config.set({
-        basePath: '',
+  config.set({
+    basePath: '',
 
-        frameworks: ['mocha', 'browserify', 'phantomjs-shim'],
+    frameworks: ['mocha', 'browserify', 'phantomjs-shim'],
 
-        files: [
-            'test/**/*.test.js'
-        ],
+    files: ['test/**/*.test.js'],
 
-        exclude: [
-        ],
+    exclude: [],
 
-        preprocessors: {
-            'test/**/*.test.js': ['browserify']
-        },
+    preprocessors: {
+      'test/**/*.test.js': ['browserify']
+    },
 
-        browserify: {
-            debug: true,
-            transform: transforms
-        },
+    browserify: {
+      debug: true,
+      transform: transforms
+    },
 
-        reporters: reporters,
+    reporters: reporters,
 
-        coverageReporter: {
-            type: 'lcov',
-            dir: 'coverage/',
-            subdir: '.'
-        },
+    coverageReporter: {
+      type: 'lcov',
+      dir: 'coverage/',
+      subdir: '.'
+    },
 
-        port: 9876,
+    port: 9876,
 
-        colors: true,
+    colors: true,
 
-        logLevel: config.LOG_INFO,
+    logLevel: config.LOG_INFO,
 
-        autoWatch: true,
+    autoWatch: true,
 
-        browsers: ['PhantomJS'],
+    browsers: ['PhantomJS'],
 
-        singleRun: true
-    });
-};
+    singleRun: true
+  })
+}
