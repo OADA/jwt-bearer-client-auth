@@ -35,9 +35,9 @@
   },
   "homepage": "https://github.com/OADA/jwt-bearer-client-auth",
   "dependencies": {
+    "@oada/oada-certs": "^1.0.2",
     "bluebird": "^3.7.2",
     "jsonwebtoken": "^8.5.1",
-    "jwks-utils": "~1.0.5",
     "object-assign": "^4.0.1",
     "pem-jwk": "^2.0.0"
   },

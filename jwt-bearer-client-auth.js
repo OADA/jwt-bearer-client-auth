@@ -19,7 +19,7 @@ var objectAssign = require('object-assign')
 var Promise = require('bluebird')
 Promise.longStackTraces()
 var jwt = Promise.promisifyAll(require('jsonwebtoken'))
-var jwks = Promise.promisifyAll(require('jwks-utils'))
+var jwks = require('@oada/oada-certs').jwksutils
 var jwk2pem = require('pem-jwk').jwk2pem
 
 function generate (key, issuer, clientId, tokenEndpoint, expiresIn, options) {
@@ -65,7 +65,7 @@ function verify (token, hint, issuer, clientId, tokenEndpoint, options, cb) {
   options = options || {}
 
   return jwks
-    .jwkForSignatureAsync(token, hint)
+    .jwkForSignature(token, hint)
     .then(function (jwk) {
       var key = jwk.kty === 'PEM' ? jwk.pem : jwk2pem(jwk)
 
