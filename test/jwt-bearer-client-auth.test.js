@@ -150,7 +150,7 @@ describe('generate', function() {
             issuer: issuer + 'invalid',
             subject: clientId + 'invalid',
             audience: tokenEndpoint + 'invalid',
-            expiresInSeconds: expiresIn + 1000
+            expiresIn: expiresIn + 1000
         };
 
         var token = clientAuth.generate(privatePem, issuer, clientId,
@@ -213,8 +213,8 @@ describe('verify', function() {
             issuer: 'Xjsi3f93',
             subject: 'vmaAU93F',
             audience: 'https://api.example.org/token',
-            expiresInSeconds: 10,
-            headers: {
+            expiresIn: 10,
+            header: {
                 kid: privatePem.kid
             }
         };
@@ -260,7 +260,7 @@ describe('verify', function() {
     });
 
     it('should require the exp claim', function() {
-        delete options.expiresInSeconds;
+        delete options.expiresIn;
         var token = jwt.sign({}, privatePem.pem, options);
 
         var valid = clientAuth

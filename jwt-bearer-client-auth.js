@@ -36,19 +36,20 @@ function generate(key, issuer, clientId, tokenEndpoint, expiresIn, options) {
 
     // Built JWT options
     options = options || {};
-    options.payload = options.payload || {};
+    var payload = options.payload || {};
+    delete options.payload
     objectAssign(options, {
         algorithm: 'RS256',
         issuer: issuer,
         subject: clientId,
         audience: tokenEndpoint,
-        expiresInSeconds: expiresIn
+        expiresIn: expiresIn
     });
 
     // Add keyId if its available
     if (key.kid) {
         objectAssign(options, {
-            headers: {
+            header: {
                 kid: key.kid
             }
         });
@@ -56,7 +57,7 @@ function generate(key, issuer, clientId, tokenEndpoint, expiresIn, options) {
 
     var pem = key.kty === 'PEM' ? key.pem : jwk2pem(key);
 
-    return jwt.sign(options.payload, pem, options);
+    return jwt.sign(payload, pem, options);
 }
 
 function verify(token, hint, issuer, clientId, tokenEndpoint, options, cb) {

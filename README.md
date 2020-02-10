@@ -47,7 +47,7 @@ caller  to override the properties required by the [jwt-bearer][jwt-bearer] RFC.
 You can add properties to the header and claim set with the following
 sub-objects:
 
-  * `headers` *{Object}* The properties of this object will be included in the
+  * `header` *{Object}* The properties of this object will be included in the
     JWT's header.
   * `payload` *{Object}* The properties of this object will be included in the
     JWT's claim body.
