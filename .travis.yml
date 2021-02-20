@@ -1,22 +1,22 @@
 language: node_js
 node_js:
-- '0.10'
-- '0.11'
-- '0.12'
-- node
-- iojs
+  - '0.10'
+  - '0.11'
+  - '0.12'
+  - node
+  - iojs
 env:
-- TEST=cover
+  - TEST=cover
 matrix:
   include:
-  - node_js: node
-    env: TEST=browser-cover
+    - node_js: node
+      env: TEST=browser-cover
 sudo: false
 before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
 before_deploy:
-- npm install -g npm
+  - npm install -g npm
 deploy:
   provider: npm
   email: andrew@balmos.org
@@ -28,10 +28,10 @@ deploy:
     all_branches: true
     repo: OADA/jwt-bearer-client-auth
 before_install:
-- npm install -g coveralls
+  - npm install -g coveralls
 script:
-- npm run lint
-- npm run style
-- npm run $TEST
+  - npm run lint
+  - npm run style
+  - npm run $TEST
 after_success:
-- cat ./coverage/lcov.info | coveralls --verbose
+  - cat ./coverage/lcov.info | coveralls --verbose

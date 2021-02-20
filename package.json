@@ -35,7 +35,7 @@
   },
   "homepage": "https://github.com/OADA/jwt-bearer-client-auth",
   "dependencies": {
-    "@oada/oada-certs": "^1.0.2",
+    "@oada/oada-certs": "^3.1.8",
     "bluebird": "^3.7.2",
     "jsonwebtoken": "^8.5.1",
     "object-assign": "^4.0.1",
@@ -58,8 +58,6 @@
     "karma-phantomjs-shim": "^1.0.0",
     "mocha": "^7.0.1",
     "phantomjs": "^2.1.7",
-    "prettier-standard": "^16.1.0",
-    "standard": "^14.3.1",
     "superagent": "^5.2.1",
     "yargs": "^15.1.0"
   }

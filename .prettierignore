@@ -1,0 +1,16 @@
+dist
+node_modules
+yarn-cache
+services-available
+
+LICENSE
+NOTICE
+
+tags*
+
+**/yarn.lock
+**/yarn-error.log
+**/.yarn/*
+**/.pnp.*
+
+act
