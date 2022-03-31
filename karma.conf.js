@@ -1,4 +1,6 @@
-/* Copyright 2015 Open Ag Data Alliance
+/**
+ * @license
+ * Copyright 2015 Open Ag Data Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,55 +15,81 @@
  * limitations under the License.
  */
 
-'use strict';
+/* eslint-disable unicorn/prevent-abbreviations, import/no-commonjs, unicorn/prefer-module */
 
-var args = require('yargs').argv;
+const webpack = require('webpack');
+const puppeteer = require('puppeteer');
+
+process.env.CHROME_BIN = puppeteer.executablePath();
 
 module.exports = function (config) {
-    var reporters = ['mocha'];
-    var transforms = ['brfs'];
-
-    if (args.cover) {
-        reporters.push('coverage');
-        transforms.push('browserify-istanbul');
-    }
-
-    config.set({
-        basePath: '',
-
-        frameworks: ['mocha', 'browserify', 'phantomjs-shim'],
-
-        files: ['test/**/*.test.js'],
-
-        exclude: [],
-
-        preprocessors: {
-            'test/**/*.test.js': ['browserify'],
+  config.set({
+    basePath: '',
+    plugins: [
+      'karma-webpack',
+      'karma-mocha',
+      'karma-mocha-reporter',
+      'karma-firefox-launcher',
+      'karma-chrome-launcher',
+      'karma-vivaldi-launcher',
+    ],
+    frameworks: ['mocha', 'webpack'],
+    files: ['test/**/*.test.js'],
+    exclude: [],
+    preprocessors: {
+      'test/**/*.test.js': ['webpack'],
+    },
+    webpack: {
+      module: {
+        rules: [
+          {
+            test: /\.test\.js$/,
+            use: [
+              // Let tests use fs.readFileSync
+              {
+                loader: 'transform-loader',
+                options: 'brfs',
+              },
+            ],
+          },
+        ],
+      },
+      plugins: [
+        new webpack.NormalModuleReplacementPlugin(/node:/, (resource) => {
+          resource.request = resource.request.replace(/^node:/, '');
+        }),
+        new webpack.ProvidePlugin({
+          process: require.resolve('process/browser'),
+          Buffer: ['buffer', 'Buffer'],
+        }),
+      ],
+      resolve: {
+        fallback: {
+          buffer: require.resolve('buffer/'),
+          crypto: require.resolve('crypto-browserify'),
+          util: require.resolve('util/'),
+          stream: require.resolve('stream-browserify'),
+          url: require.resolve('url/'),
+          // eslint-disable-next-line camelcase
+          string_decoder: require.resolve('string_decoder/'),
+          events: require.resolve('events/'),
+          path: require.resolve('path-browserify'),
+          assert: require.resolve('assert/'),
+          os: require.resolve('os-browserify/browser'),
+          module: false,
         },
-
-        browserify: {
-            debug: true,
-            transform: transforms,
-        },
-
-        reporters: reporters,
-
-        coverageReporter: {
-            type: 'lcov',
-            dir: 'coverage/',
-            subdir: '.',
-        },
-
-        port: 9876,
-
-        colors: true,
-
-        logLevel: config.LOG_INFO,
-
-        autoWatch: true,
-
-        browsers: ['PhantomJS'],
-
-        singleRun: true,
-    });
+      },
+      context: __dirname,
+      node: {
+        __dirname: true,
+      },
+    },
+    reporters: ['mocha'],
+    port: 9876,
+    colors: true,
+    logLevel: config.LOG_INFO,
+    autoWatch: true,
+    browsers: ['ChromeHeadless'],
+    singleRun: true,
+  });
 };

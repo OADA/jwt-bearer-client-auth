@@ -1,12 +1,14 @@
 dist
+.test
+coverage
 node_modules
 yarn-cache
 services-available
 
 LICENSE
-NOTICE
 
 tags*
+.history
 
 **/yarn.lock
 **/yarn-error.log

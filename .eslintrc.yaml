@@ -1,0 +1,128 @@
+root: true
+
+extends:
+  - plugin:node/recommended
+  - plugin:github/recommended
+  - plugin:promise/recommended
+  - plugin:regexp/recommended
+  - plugin:array-func/recommended
+  - plugin:optimize-regex/recommended
+  - plugin:import/recommended
+  - plugin:unicorn/recommended
+  - plugin:security/recommended
+  - plugin:sonarjs/recommended
+  - plugin:ava/recommended
+  - xo
+  - prettier
+
+plugins:
+  - node
+  - github
+  - promise
+  - regexp
+  - array-func
+  - optimize-regex
+  - no-constructor-bind
+  - import
+  - unicorn
+  - security
+  - no-secrets
+  - sonarjs
+  - ava
+  - notice
+
+parser: '@typescript-eslint/parser'
+
+parserOptions:
+  ecmaVersion: 2020
+  project: './tsconfig.eslint.json'
+
+overrides:
+  - files: '*.ts'
+    extends:
+      - plugin:github/typescript
+      - plugin:import/typescript
+      - xo-typescript
+      - prettier
+    parserOptions:
+      ecmaVersion: 2020
+      project: './tsconfig.eslint.json'
+    rules:
+      '@typescript-eslint/naming-convention':
+        [
+          error,
+          { selector: default, format: [camelCase] },
+          { selector: objectLiteralProperty, format: null },
+          { selector: enumMember, format: [PascalCase] },
+          { selector: typeProperty, format: null },
+
+          {
+            selector: variableLike,
+            format: [camelCase, UPPER_CASE],
+            leadingUnderscore: allow,
+          },
+          {
+            selector: parameter,
+            format: [camelCase],
+            leadingUnderscore: allow,
+          },
+
+          {
+            selector: memberLike,
+            modifiers: [private],
+            format: [camelCase],
+            leadingUnderscore: require,
+          },
+
+          { selector: typeLike, format: [PascalCase] },
+        ]
+      '@typescript-eslint/restrict-template-expressions': off
+      '@typescript-eslint/no-shadow': warn
+
+rules:
+  notice/notice:
+    - error
+    - template: |
+        /**
+         * @license
+         * Copyright <%= YEAR %> Open Ag Data Alliance
+         *
+         * Licensed under the Apache License, Version 2.0 (the "License");
+         * you may not use this file except in compliance with the License.
+         * You may obtain a copy of the License at
+         *
+         *     http://www.apache.org/licenses/LICENSE-2.0
+         *
+         * Unless required by applicable law or agreed to in writing, software
+         * distributed under the License is distributed on an "AS IS" BASIS,
+         * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+         * See the License for the specific language governing permissions and
+         * limitations under the License.
+         */
+      onNonMatchingHeader: append
+      nonMatchingTolerance: 0.7
+  unicorn/prefer-node-protocol: off
+  sonarjs/no-duplicate-string: [warn, 5]
+  sonarjs/cognitive-complexity: warn
+  eslint-comments/no-unused-disable: off
+  import/extensions: off
+  node/no-unpublished-import: off
+  spaced-comment: [error, always, markers: [/, //]]
+  filenames/match-regex: off
+  unicorn/filename-case: off
+  i18n-text/no-en: off
+  eslint-comments/no-use: off
+  no-secrets/no-secrets: error
+  no-empty-label: off
+  no-return-await: off
+  no-warning-comments: off
+  node/no-missing-import: off
+  import/no-unresolved: off
+  unicorn/prefer-spread: off
+  no-constructor-bind/no-constructor-bind: error
+  no-constructor-bind/no-constructor-state: error
+  sort-imports: [warn, { allowSeparatedGroups: true }]
+  ava/no-ignored-test-files: off
+  ava/no-import-test-files: off
+  ava/no-skip-test: warn
+  ava/no-skip-assert: warn

@@ -1,39 +1,42 @@
+# jwt-bearer-client-auth
+
+[![npm](https://img.shields.io/npm/v/jwt-bearer-client-auth)](https://www.npmjs.com/package/jwt-bearer-client-auth)
+[![Downloads/week](https://img.shields.io/npm/dw/jwt-bearer-client-auth.svg)](https://npmjs.org/package/jwt-bearer-client-auth)
 [![Build Status](https://travis-ci.org/OADA/jwt-bearer-client-auth.svg?branch=master)](https://travis-ci.org/OADA/jwt-bearer-client-auth)
 [![Coverage Status](https://coveralls.io/repos/OADA/jwt-bearer-client-auth/badge.svg?branch=master)](https://coveralls.io/r/OADA/jwt-bearer-client-auth?branch=master)
 [![Dependency Status](https://david-dm.org/oada/jwt-bearer-client-auth.svg)](https://david-dm.org/oada/jwt-bearer-client-auth)
-[![License](http://img.shields.io/:license-Apache%202.0-green.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+[![License](https://img.shields.io/github/license/OADA/jwt-bearer-client-auth)](LICENSE)
 
-# jwt-bearer-client-auth
-
-Create and verify RS256 based JWT oauth-jwt-bearer client authentications.
+Create and verify RS256 based JWT OAUTH-JWT-bearer client authentications.
 
 ## Installation
 
 ```shell
-npm install jwt-bearer-client-auth
+yarn add jwt-bearer-client-auth
 ```
 
-## Require Usage
+## Import Usage
 
-```javascript
-var clientAuth = require('jwt-bearer-client-auth');
+```typescript
+import { generate, verify } from 'jwt-bearer-client-auth';
 ```
 
 ## API
 
-### generate(key, issuer, clientId, tokenEndpoint, expiresIn, options)
+### `generate({key, issuer, clientId, tokenEndpoint, expiresIn, payload, options})`
 
 Generate a valid [jwt-bearer][jwt-bearer] client assertion from client details and the
 client's private RSA256 key.
 
 #### Parameters
 
-`key` _{PEM JWK}_ The key used to sign the assertion. Currentlt the only
+`key` _{PEM JWK}_ The key used to sign the assertion. Currently, the only
 supported key type is "PEM JWK". If the JWK has a `kid` property it will be
 included in the client assertion header.
 
-`issuer` _{String}_ An "unique identifier for the entity that issued the JWT." A
-good choice for a client generating assertions on-the-fly might be the client's
+`issuer` _{String}_ An "unique identifier for the entity that issued the JWT."
+A good choice for a client generating assertions on the fly might be the client's
 OAuth 2.0 client ID.
 
 `clientId` _{String}_ The client's OAuth 2.0 client ID. It is the required value
@@ -45,49 +48,46 @@ It is the required value for the JWT's `aud` claim.
 `expiresIn` _{Number}_ The number of seconds from now in which the client
 assertion expires.
 
+`payload` _{Object}_ The properties of this object will be included in the
+JWT's claim body.
+
 `options` _{Object}_ The `options` parameter is passed directly to
 [node-jsonwebtoken][auth0/node-jsonwebtoken]. This module will not allow the
 caller to override the properties required by the [jwt-bearer][jwt-bearer] RFC.
-You can add properties to the header and claim set with the following
-sub-objects:
-
-- `header` _{Object}_ The properties of this object will be included in the
-  JWT's header.
-- `payload` _{Object}_ The properties of this object will be included in the
-  JWT's claim body.
 
 #### Usage Example
 
-```javascript
+```typescript
 // Generate a jwt-bearer client assertion
-var fs = require('fs');
 
-var key = {
+import fs from 'node:fs/promises';
+
+import { generate } from 'jwt-bearer-client-auth';
+
+const key = {
   kid: 'abc123',
   kty: 'PEM',
-  pem: fs.readFileSync('abc123.private.pem'),
+  pem: await fs.readFile('abc123.private.pem'),
 };
-var issuer = 'aksdfj2w3';
-var clientId = 'ocjvS38kjxfa3JFXal342';
-var tokenEndpoint = 'https://api.example.org/token';
-var expiresIn = 60;
-var options = {
-  payload: {
-    jti: 'zkjfa3i13',
-  },
+const issuer = 'aksdfj2w3';
+const clientId = 'ocjvS38kjxfa3JFXal342';
+const tokenEndpoint = 'https://api.example.org/token';
+const expiresIn = 60;
+const payload: {
+  jti: 'zkjfa3i13';
 };
 
-var assertion = clientAuth.generate(
+const assertion = await generate({
   key,
   issuer,
   clientId,
   tokenEndpoint,
   expiresIn,
-  options
-);
+  payload,
+});
 ```
 
-### verify(token, hint, issuer, clientId, tokenEndpoint, options, [cb])
+### `verify({token, hint, issuer, clientId, tokenEndpoint, payload})`
 
 Verify the given `assertion` is a valid [jwt-bearer][jwt-bearer] client
 assertion.
@@ -99,21 +99,21 @@ is also supported.
 
 #### Parameters
 
-`token` _{JWT}_ The token which is being verified as a valid jwt-bearer client
+`token` _{JWT}_ The token which is being verified as a valid JWT-bearer client
 assertion.
 
 `hint` _{JWK/JWKS/JWK URI/false}_ This is passed directly to the
 [jwks-utils][jwks-utils] `jwkForSignature` method. It can be:
 
 - The JWK for the token
-- A JWKS which the tokens JWK is stored in (by key id, `kid`)
-- A URI for a JWKS which the tokens JWK is stored in (by key id, `kid`)
+- A JWKS in which the tokens JWK is stored (by key id, `kid`)
+- A URI for a JWKS in which the tokens JWK is stored (by key id, `kid`)
 - Or, `false`, indicating that the key is stored within the token's header
   under either the `jwk` or `jku` property (note this can be easily be
-  spoofed and the key should be verfied by other means before trusting it).
+  spoofed and the key should be verified by other means before trusting it).
 
-`issuer` _{String}_ An "unique identifier for the entity that issued the JWT." A
-good choice for a client generating assertions on-the-fly might be the client's
+`issuer` _{String}_ An "unique identifier for the entity that issued the JWT."
+A good choice for a client generating assertions on the fly might be the client's
 OAuth 2.0 client ID.
 
 `clientId` _{String}_ The client's OAuth 2.0 client ID. It is the required value
@@ -122,37 +122,38 @@ for the JWT's `sub` claim.
 `tokenEndpoint` _{String}_ The OAuth 2.0 authorization server's token endpoint.
 It is the required value for the JWT's `aud` claim.
 
-`options` _{Object}_ The `options` parameter is used to customize the
-verification of the client assertion. The properties of this object are:
-
-- `payload` _{Object}_ Extra payload claims (and acceptable values) the caller
-  is requiring to be included in the token in order to verify the assertion.
-
-`cb` _{Function}_ The `cb(err, payload)` function can be used instead of the
-returned promise in the typical node fashion.
+`payload` _{Object}_ Extra payload claims (and acceptable values) the caller
+requires to be included in the token to verify the assertion.
 
 #### Usage Example
 
-```javascript
+```typescript
 // Verify a jwt-bearer-client-auth client assertion
-var assertion = getClientAssertion();
-var key = getPublicKey();
-var issuer = getIssuer();
-var clientId = getClientId();
-var tokenEndpoint = getTokenEndpoint();
-var options = {
-  jti: 'xjkaf3xz'
+
+import { verify } from 'jwt-bearer-client-auth';
+
+const assertion = getClientAssertion();
+const key = getPublicKey();
+const issuer = getIssuer();
+const clientId = getClientId();
+const tokenEndpoint = getTokenEndpoint();
+const options = {
+  jti: 'xjkaf3xz',
 };
 
-clientAuth
-  .verify(assertion, key, issuer, clientId, tokenEndpoint, options)
-  .then(function(payload) {
-    console.log('Client assertion validated');
-  })
-  .catch(function(err) {
-    console.log('Client assertion was not validated, because: ' + err);
+try {
+  const payload = await verify({
+    assertion,
+    key,
+    issuer,
+    clientId,
+    tokenEndpoint,
+    options,
   });
-})
+  console.log('Client assertion validated');
+} catch (error: unknown) {
+  console.error(err, 'Client assertion was not validated');
+}
 ```
 
 [jwt-bearer]: https://tools.ietf.org/id/draft-ietf-oauth-jwt-bearer.txt

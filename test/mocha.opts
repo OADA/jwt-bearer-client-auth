@@ -1,4 +1,5 @@
 --reporter spec
 --ui bdd
 --timeout 200
+--require source-map-support/register.js
 ./test/**/*.test.js

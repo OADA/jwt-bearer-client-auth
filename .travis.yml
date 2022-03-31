@@ -1,16 +1,15 @@
 language: node_js
 node_js:
-  - '0.10'
-  - '0.11'
-  - '0.12'
-  - node
-  - iojs
+  - '12'
+  - '14'
+  - '16'
+  - '17'
 env:
   - TEST=cover
 matrix:
   include:
     - node_js: node
-      env: TEST=browser-cover
+      env: TEST=test:browser
 sudo: false
 before_script:
   - export DISPLAY=:99.0

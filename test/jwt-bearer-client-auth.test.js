@@ -1,4 +1,6 @@
-/* Copyright 2015 Open Ag Data Alliance
+/**
+ * @license
+ * Copyright 2015 Open Ag Data Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,428 +16,416 @@
  */
 
 /* eslint-env mocha */
-'use strict';
+/* eslint-disable import/no-commonjs, unicorn/prefer-module */
 
-var chai = require('chai');
+const fs = require('fs');
+
+const chai = require('chai');
 chai.use(require('chai-as-promised'));
-var expect = chai.expect;
+const { expect } = chai;
 
-var fs = require('fs');
-var jws = require('jws');
-var jwt = require('jsonwebtoken');
-var pem2jwk = require('pem-jwk').pem2jwk;
+const jws = require('jws');
+const jwt = require('jsonwebtoken');
+const { pem2jwk } = require('pem-jwk');
 
-var clientAuth = require('../');
+const clientAuth = require('../');
 
-describe('generate', function () {
-    var privatePem;
-    var privateJwk;
-    var publicPem;
-    var publicJwk;
-    var expiresIn;
-    var issuer;
-    var clientId;
-    var tokenEndpoint;
+describe('generate', () => {
+  let privatePem;
+  let privateJwk;
+  let publicPem;
+  let publicJwk;
+  let expiresIn;
+  let issuer;
+  let clientId;
+  let tokenEndpoint;
 
-    function checkToken(token, cb) {
-        var decoded = jws.decode(token);
-        expect(decoded.header.kid).to.equal(privatePem.kid);
-        expect(decoded.payload.exp - decoded.payload.iat).to.equal(expiresIn);
-        expect(decoded.payload.iss).to.equal(issuer);
-        expect(decoded.payload.sub).to.equal(clientId);
-        expect(decoded.payload.aud).to.equal(tokenEndpoint);
+  async function checkToken(token) {
+    const decoded = jws.decode(token);
+    expect(decoded.header.kid).to.equal(privatePem.kid);
+    expect(decoded.payload.exp - decoded.payload.iat).to.equal(expiresIn);
+    expect(decoded.payload.iss).to.equal(issuer);
+    expect(decoded.payload.sub).to.equal(clientId);
+    expect(decoded.payload.aud).to.equal(tokenEndpoint);
 
-        jwt.verify(token, publicPem.pem, function (err) {
-            expect(err).to.not.be.ok;
+    await jwt.verify(token, publicPem.pem);
+    return decoded;
+  }
 
-            cb(decoded);
-        });
-    }
+  beforeEach(() => {
+    privatePem = {
+      kid: 'abc123',
+      kty: 'PEM',
+      pem: fs.readFileSync(__dirname + '/keys/abc123.private.pem'),
+    };
+    privateJwk = pem2jwk(privatePem.pem);
+    privateJwk.kid = 'abc123';
+    publicPem = {
+      kid: 'abc123',
+      kty: 'PEM',
+      pem: fs.readFileSync(__dirname + '/keys/abc123.public.pem'),
+    };
+    publicJwk = pem2jwk(publicPem.pem);
+    publicJwk.kid = 'abc123';
+    expiresIn = 123;
+    issuer = 'fJd7s723qa';
+    clientId = 'xi7sca3';
+    tokenEndpoint = 'https://example.org/token';
+  });
 
-    beforeEach(function () {
-        privatePem = {
-            kid: 'abc123',
-            kty: 'PEM',
-            pem: fs.readFileSync('test/keys/abc123.private.pem'),
-        };
-        privateJwk = pem2jwk(privatePem.pem);
-        privateJwk.kid = 'abc123';
-        publicPem = {
-            kid: 'abc123',
-            kty: 'PEM',
-            pem: fs.readFileSync('test/keys/abc123.public.pem'),
-        };
-        publicJwk = pem2jwk(publicPem.pem);
-        publicJwk.kid = 'abc123';
-        expiresIn = 123;
-        issuer = 'fJd7s723qa';
-        clientId = 'xi7sca3';
-        tokenEndpoint = 'https://example.org/token';
+  it('should require object for key', async () => {
+    const token = clientAuth.generate({});
+
+    expect(token).to.eventually.be.rejectedWith(TypeError);
+  });
+
+  it('should work with a PEM jwk', async () => {
+    const token = await clientAuth.generate({
+      key: privatePem,
+      issuer,
+      clientId,
+      tokenEndpoint,
+      expiresIn,
     });
 
-    it('should require object for key', function () {
-        var token = clientAuth.generate();
+    await checkToken(token);
+  });
 
-        expect(token).to.equal(undefined);
+  it('should work with an RSA jwk', async () => {
+    const token = await clientAuth.generate({
+      key: privateJwk,
+      issuer,
+      clientId,
+      tokenEndpoint,
+      expiresIn,
     });
 
-    it('should work with a PEM jwk', function (done) {
-        var token = clientAuth.generate(
-            privatePem,
-            issuer,
-            clientId,
-            tokenEndpoint,
-            expiresIn
-        );
+    await checkToken(token);
+  });
 
-        return checkToken(token, function () {
-            done();
-        });
+  it('should fail if key type not supported', async () => {
+    const token = clientAuth.generate({ key: { kty: '[Unknown]' } });
+
+    expect(token).to.eventually.be.rejectedWith(TypeError);
+  });
+
+  it('should require issuer to be a string', async () => {
+    const token = clientAuth.generate({ key: privatePem, expiresIn });
+
+    expect(token).to.eventually.be.rejectedWith(TypeError);
+  });
+
+  it('should require clientId to be a string', async () => {
+    const token = clientAuth.generate({
+      key: privatePem,
+      issuer,
+      expiresIn,
     });
 
-    it('should work with an RSA jwk', function (done) {
-        var token = clientAuth.generate(
-            privateJwk,
-            issuer,
-            clientId,
-            tokenEndpoint,
-            expiresIn
-        );
+    expect(token).to.eventually.be.rejectedWith(TypeError);
+  });
 
-        return checkToken(token, function () {
-            done();
-        });
+  it('should require tokenEndpoint to be a string', async () => {
+    const token = clientAuth.generate({
+      key: privatePem,
+      issuer,
+      clientId,
+      expiresIn,
     });
 
-    it('should fail if key type not supported', function () {
-        var token = clientAuth.generate({ kty: '[Uknown]' });
+    expect(token).to.eventually.be.rejectedWith(TypeError);
+  });
 
-        expect(token).to.equal(undefined);
+  it('should require expires to be a number', async () => {
+    const token = clientAuth.generate({
+      key: privatePem,
+      issuer,
+      clientId,
+      tokenEndpoint,
+      expiresIn: 'expiresIn',
     });
 
-    it('should require issuer to be a string', function () {
-        var token = clientAuth.generate(privatePem, expiresIn);
+    expect(token).to.eventually.be.rejectedWith(TypeError);
+  });
 
-        expect(token).to.equal(undefined);
+  it('should require options to be an object', async () => {
+    const token = clientAuth.generate({
+      key: privatePem,
+      issuer,
+      clientId,
+      tokenEndpoint,
+      expiresIn,
+      options: 'options',
     });
 
-    it('should require clientId to be a string', function () {
-        var token = clientAuth.generate(privatePem, issuer, expiresIn);
+    expect(token).to.eventually.be.rejectedWith(TypeError);
+  });
 
-        expect(token).to.equal(undefined);
+  it('should allow no options', async () => {
+    const token = await clientAuth.generate({
+      key: privatePem,
+      issuer,
+      clientId,
+      tokenEndpoint,
+      expiresIn,
     });
 
-    it('should require tokenEndpoint to be a string', function () {
-        var token = clientAuth.generate(
-            privatePem,
-            issuer,
-            clientId,
-            expiresIn
-        );
+    await checkToken(token);
+  });
 
-        expect(token).to.equal(undefined);
+  it('should not allow overwriting required parameters', async () => {
+    const options = {
+      algorithm: 'RS256' + 'invalid',
+      issuer: `${issuer}invalid`,
+      subject: `${clientId}invalid`,
+      audience: `${tokenEndpoint}invalid`,
+      expiresIn: expiresIn + 1000,
+    };
+
+    const token = await clientAuth.generate({
+      key: privatePem,
+      issuer,
+      clientId,
+      tokenEndpoint,
+      expiresIn,
+      options,
     });
 
-    it('should require expires to be a number', function () {
-        var token = clientAuth.generate(
-            privatePem,
-            issuer,
-            clientId,
-            tokenEndpoint,
-            'expiresIn'
-        );
+    await checkToken(token);
+  });
 
-        expect(token).to.equal(undefined);
+  it('should allow other payload claims', async () => {
+    const options = {
+      payload: {
+        jti: 'JTI',
+      },
+    };
+
+    const token = await clientAuth.generate({
+      key: privatePem,
+      issuer,
+      clientId,
+      tokenEndpoint,
+      expiresIn,
+      ...options,
     });
 
-    it('should require options to be an object', function () {
-        var token = clientAuth.generate(
-            privatePem,
-            issuer,
-            clientId,
-            tokenEndpoint,
-            expiresIn,
-            'options'
-        );
+    const decoded = await checkToken(token);
+    expect(decoded.payload.jti).to.equal('JTI');
+  });
 
-        expect(token).to.equal(undefined);
+  it('should allow a signing key without an id', async () => {
+    delete privatePem.kid;
+
+    const token = await clientAuth.generate({
+      key: privatePem,
+      issuer,
+      clientId,
+      tokenEndpoint,
+      expiresIn,
     });
 
-    it('should allow no options', function (done) {
-        var token = clientAuth.generate(
-            privatePem,
-            issuer,
-            clientId,
-            tokenEndpoint,
-            expiresIn
-        );
-
-        checkToken(token, function () {
-            done();
-        });
-    });
-
-    it('should not allow overwriting required parameters', function (done) {
-        var options = {
-            algorithm: 'RS256' + 'invalid',
-            issuer: issuer + 'invalid',
-            subject: clientId + 'invalid',
-            audience: tokenEndpoint + 'invalid',
-            expiresIn: expiresIn + 1000,
-        };
-
-        var token = clientAuth.generate(
-            privatePem,
-            issuer,
-            clientId,
-            tokenEndpoint,
-            expiresIn,
-            options
-        );
-
-        checkToken(token, function () {
-            done();
-        });
-    });
-
-    it('should allow other payload claims', function (done) {
-        var options = {
-            payload: {
-                jti: 'JTI',
-            },
-        };
-
-        var token = clientAuth.generate(
-            privatePem,
-            issuer,
-            clientId,
-            tokenEndpoint,
-            expiresIn,
-            options
-        );
-
-        checkToken(token, function (decoded) {
-            expect(decoded.payload.jti).to.equal('JTI');
-
-            done();
-        });
-    });
-
-    it('should allow a signing key without an id', function (done) {
-        delete privatePem.kid;
-
-        var token = clientAuth.generate(
-            privatePem,
-            issuer,
-            clientId,
-            tokenEndpoint,
-            expiresIn
-        );
-
-        checkToken(token, function (decoded) {
-            expect(decoded.header.kid).to.equal(undefined);
-
-            done();
-        });
-    });
+    const decoded = await checkToken(token);
+    expect(decoded.header.kid).to.equal(undefined);
+  });
 });
 
-describe('verify', function () {
-    var privatePem = {
-        kid: 'abc123',
-        kty: 'PEM',
-        pem: fs.readFileSync('test/keys/abc123.private.pem'),
+describe('verify', () => {
+  const privatePem = {
+    kid: 'abc123',
+    kty: 'PEM',
+    pem: fs.readFileSync(__dirname + '/keys/abc123.private.pem'),
+  };
+  const publicPem = {
+    kid: 'abc123',
+    kty: 'PEM',
+    pem: fs.readFileSync(__dirname + '/keys/abc123.public.pem'),
+  };
+  const publicJwk = pem2jwk(publicPem.pem);
+  publicJwk.kid = 'abc123';
+  let options;
+
+  beforeEach(() => {
+    options = {
+      algorithm: 'RS256',
+      issuer: 'Xjsi3f93',
+      subject: 'vmaAU93F',
+      audience: 'https://api.example.org/token',
+      expiresIn: 10,
+      header: {
+        kid: privatePem.kid,
+      },
     };
-    var publicPem = {
-        kid: 'abc123',
-        kty: 'PEM',
-        pem: fs.readFileSync('test/keys/abc123.public.pem'),
+  });
+
+  it('should verify a valid token', () => {
+    const token = jwt.sign({}, privatePem.pem, options);
+
+    const valid = clientAuth.verify({
+      token,
+      hint: publicJwk,
+      issuer: options.issuer,
+      clientId: options.subject,
+      tokenEndpoint: options.audience,
+    });
+
+    return expect(valid).to.eventually.be.ok;
+  });
+
+  it('should work with a PEM jwk', () => {
+    const token = jwt.sign({}, privatePem.pem, options);
+
+    const valid = clientAuth.verify({
+      token,
+      hint: publicPem,
+      issuer: options.issuer,
+      clientId: options.subject,
+      tokenEndpoint: options.audience,
+    });
+
+    return expect(valid).to.eventually.be.ok;
+  });
+
+  it('should work with an RSA jwk', () => {
+    const token = jwt.sign({}, privatePem.pem, options);
+
+    const valid = clientAuth.verify({
+      token,
+      hint: publicJwk,
+      issuer: options.issuer,
+      clientId: options.subject,
+      tokenEndpoint: options.audience,
+    });
+
+    return expect(valid).to.eventually.be.ok;
+  });
+
+  it('should require the exp claim', () => {
+    delete options.expiresIn;
+    const token = jwt.sign({}, privatePem.pem, options);
+
+    const valid = clientAuth.verify({
+      token,
+      hint: publicJwk,
+      issuer: options.issuer,
+      clientId: options.subject,
+      tokenEndpoint: options.audience,
+    });
+
+    return expect(valid).to.eventually.be.rejected;
+  });
+
+  it('should require consistent issuer', () => {
+    const token = jwt.sign({}, privatePem.pem, options);
+
+    const valid = clientAuth.verify({
+      token,
+      hint: publicJwk,
+      clientId: options.subject,
+      tokenEndpoint: options.audience,
+      issuer: `${options.issuer}extra`,
+    });
+
+    return expect(valid).to.eventually.be.rejected;
+  });
+
+  it('should require consistent subject', () => {
+    const token = jwt.sign({}, privatePem.pem, options);
+
+    const valid = clientAuth.verify({
+      token,
+      hint: publicJwk,
+      issuer: options.issuer,
+      tokenEndpoint: options.audience,
+      clientId: `${options.subject}extra`,
+    });
+
+    return expect(valid).to.eventually.be.rejected;
+  });
+
+  it('should require consistent audience', () => {
+    const token = jwt.sign({}, privatePem.pem, options);
+
+    const valid = clientAuth.verify({
+      token,
+      hint: publicJwk,
+      issuer: options.issuer,
+      clientId: options.subject,
+      tokenEndpoint: `${options.audience}extra`,
+    });
+
+    return expect(valid).to.eventually.be.rejected;
+  });
+
+  it('should enforce not before (nbf) claim', () => {
+    const claims = {
+      nbf: Math.floor((Date.now() + 10_000) / 1000),
     };
-    var publicJwk = pem2jwk(publicPem.pem);
-    publicJwk.kid = 'abc123';
-    var options;
 
-    beforeEach(function () {
-        options = {
-            algorithm: 'RS256',
-            issuer: 'Xjsi3f93',
-            subject: 'vmaAU93F',
-            audience: 'https://api.example.org/token',
-            expiresIn: 10,
-            header: {
-                kid: privatePem.kid,
-            },
-        };
+    const token = jwt.sign(claims, privatePem.pem, options);
+
+    const valid = clientAuth.verify({
+      token,
+      hint: publicJwk,
+      issuer: options.issuer,
+      clientId: options.subject,
+      tokenEndpoint: options.audience,
     });
 
-    it('should verify a valid token', function () {
-        var token = jwt.sign({}, privatePem.pem, options);
+    return expect(valid).to.eventually.be.rejected;
+  });
 
-        var valid = clientAuth.verify(
-            token,
-            publicJwk,
-            options.issuer,
-            options.subject,
-            options.audience
-        );
+  it('should verify external claims', () => {
+    const claims = {
+      jti: '1234asdf',
+    };
 
-        return expect(valid).to.eventually.be.ok;
+    const token = jwt.sign(claims, privatePem.pem, options);
+
+    const valid = clientAuth.verify({
+      token,
+      hint: publicJwk,
+      issuer: options.issuer,
+      clientId: options.subject,
+      tokenEndpoint: options.audience,
+      payload: claims,
     });
 
-    it('should work with a PEM jwk', function () {
-        var token = jwt.sign({}, privatePem.pem, options);
+    return expect(valid).to.eventually.be.ok;
+  });
 
-        var valid = clientAuth.verify(
-            token,
-            publicPem,
-            options.issuer,
-            options.subject,
-            options.audience
-        );
+  it('should require consistent external claims', () => {
+    const claims = {
+      jti: '1234asdf',
+    };
 
-        return expect(valid).to.eventually.be.ok;
+    const token = jwt.sign(claims, privatePem.pem, options);
+
+    claims.jti += 'extra';
+    const valid = clientAuth.verify({
+      token,
+      hint: publicJwk,
+      issuer: options.issuer,
+      clientId: options.subject,
+      tokenEndpoint: options.audience,
+      payload: claims,
     });
 
-    it('should work with an RSA jwk', function () {
-        var token = jwt.sign({}, privatePem.pem, options);
+    return expect(valid).to.eventually.be.rejected;
+  });
 
-        var valid = clientAuth.verify(
-            token,
-            publicJwk,
-            options.issuer,
-            options.subject,
-            options.audience
-        );
+  it('should fail if key type not supported', () => {
+    const token = jwt.sign({}, privatePem.pem, options);
 
-        return expect(valid).to.eventually.be.ok;
+    publicJwk.kty = '[Unknown]';
+    const valid = clientAuth.verify({
+      token,
+      hint: publicJwk,
+      issuer: options.issuer,
+      clientId: options.subject,
+      tokenEndpoint: `${options.audience}extra`,
     });
 
-    it('should require the exp claim', function () {
-        delete options.expiresIn;
-        var token = jwt.sign({}, privatePem.pem, options);
-
-        var valid = clientAuth.verify(
-            token,
-            publicJwk,
-            options.issuer,
-            options.subject,
-            options.audience
-        );
-
-        return expect(valid).to.eventually.be.rejected;
-    });
-
-    it('should require consistent issuer', function () {
-        var token = jwt.sign({}, privatePem.pem, options);
-
-        var valid = clientAuth.verify(
-            token,
-            publicJwk,
-            options.issuer + 'extra',
-            options.subject,
-            options.audience
-        );
-
-        return expect(valid).to.eventually.be.rejected;
-    });
-
-    it('should require consistent subject', function () {
-        var token = jwt.sign({}, privatePem.pem, options);
-
-        var valid = clientAuth.verify(
-            token,
-            publicJwk,
-            options.issuer,
-            options.subject + 'extra',
-            options.audience
-        );
-
-        return expect(valid).to.eventually.be.rejected;
-    });
-
-    it('should require consistent audience', function () {
-        var token = jwt.sign({}, privatePem.pem, options);
-
-        var valid = clientAuth.verify(
-            token,
-            publicJwk,
-            options.issuer,
-            options.subject,
-            options.audience + 'extra'
-        );
-
-        return expect(valid).to.eventually.be.rejected;
-    });
-
-    it('should enfore not before (nbf) claim', function () {
-        var claims = {
-            nbf: Math.floor((Date.now() + 10000) / 1000),
-        };
-
-        var token = jwt.sign(claims, privatePem.pem, options);
-
-        var valid = clientAuth.verify(
-            token,
-            publicJwk,
-            options.issuer,
-            options.subject,
-            options.audience
-        );
-
-        return expect(valid).to.eventually.be.rejected;
-    });
-
-    it('should verify external claims', function () {
-        var claims = {
-            jti: '1234asdf',
-        };
-
-        var token = jwt.sign(claims, privatePem.pem, options);
-
-        var valid = clientAuth.verify(
-            token,
-            publicJwk,
-            options.issuer,
-            options.subject,
-            options.audience,
-            { payload: claims }
-        );
-
-        return expect(valid).to.eventually.be.ok;
-    });
-
-    it('should require consistent external claims', function () {
-        var claims = {
-            jti: '1234asdf',
-        };
-
-        var token = jwt.sign(claims, privatePem.pem, options);
-
-        claims.jti += 'extra';
-        var valid = clientAuth.verify(
-            token,
-            publicJwk,
-            options.issuer,
-            options.subject,
-            options.audience,
-            { payload: claims }
-        );
-
-        return expect(valid).to.eventually.be.rejected;
-    });
-
-    it('should fail if key type not supported', function () {
-        var token = jwt.sign({}, privatePem.pem, options);
-
-        publicJwk.kty = '[Unknown]';
-        var valid = clientAuth.verify(
-            token,
-            publicJwk,
-            options.issuer,
-            options.subject,
-            options.audience + 'extra'
-        );
-
-        return expect(valid).to.eventually.be.rejected;
-    });
+    return expect(valid).to.eventually.be.rejected;
+  });
 });
