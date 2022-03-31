@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "rootDir": ".",
+    "outDir": "../.test"
+  },
+  "include": ["."],
+  "references": [
+    {
+      "path": "../"
+    }
+  ]
+}

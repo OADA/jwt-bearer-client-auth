@@ -1,0 +1,7 @@
+{
+  "reporter": "spec",
+  "ui": "bdd",
+  "extensions": ["ts"],
+  "require": "ts-node/register",
+  "spec": ["test/**/*.test.ts"]
+}

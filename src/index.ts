@@ -16,18 +16,18 @@
  */
 
 import { RSA_JWK, jwk2pem } from 'pem-jwk';
-import jwt from 'jsonwebtoken';
+import { SignOptions, verify as jwtVerify, sign } from 'jsonwebtoken';
 
 import { jwksUtils as jwks } from '@oada/certs';
 
 export interface GenerateOptions {
-  key: jwks.JWKs;
+  key: jwks.JWK;
   issuer: string;
   clientId: string;
   tokenEndpoint: string;
   expiresIn: number;
   payload?: Record<string, unknown>;
-  options?: { header?: Record<string, unknown> };
+  options?: { [key: string]: unknown; header?: Record<string, unknown> };
 }
 export async function generate({
   key,
@@ -50,7 +50,7 @@ export async function generate({
   }
 
   // Build JWT options
-  const jwtOptions: jwt.SignOptions = {
+  const jwtOptions: SignOptions = {
     ...options,
     algorithm: 'RS256',
     issuer,
@@ -67,7 +67,7 @@ export async function generate({
 
   const pem = key.kty === 'PEM' ? key.pem! : jwk2pem(key as RSA_JWK);
 
-  return jwt.sign(payload, pem, jwtOptions);
+  return sign(payload, pem, jwtOptions);
 }
 
 export interface VerifyOptions {
@@ -94,7 +94,7 @@ export async function verify({
     audience: tokenEndpoint,
   };
 
-  const jwtPayload = jwt.verify(token, key, verifyOptions);
+  const jwtPayload = jwtVerify(token, key, verifyOptions);
   if (typeof jwtPayload === 'string') {
     throw new TypeError(`Failed to parse payload: ${jwtPayload}`);
   }

@@ -34,16 +34,22 @@ module.exports = function (config) {
       'karma-vivaldi-launcher',
     ],
     frameworks: ['mocha', 'webpack'],
-    files: ['test/**/*.test.js'],
+    files: ['test/**/*.test.ts'],
     exclude: [],
     preprocessors: {
-      'test/**/*.test.js': ['webpack'],
+      'test/**/*.test.ts': ['webpack'],
+    },
+    karmaTypescriptConfig: {
+      bundlerOptions: {
+        validateSyntax: false,
+      },
+      tsconfig: 'test/tsconfig.json',
     },
     webpack: {
       module: {
         rules: [
           {
-            test: /\.test\.js$/,
+            test: /\.test\.ts$/,
             use: [
               // Let tests use fs.readFileSync
               {
@@ -51,6 +57,10 @@ module.exports = function (config) {
                 options: 'brfs',
               },
             ],
+          },
+          {
+            test: /\.ts$/,
+            loader: 'ts-loader',
           },
         ],
       },
