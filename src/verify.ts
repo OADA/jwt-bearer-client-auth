@@ -18,7 +18,6 @@
 import { RSA_JWK, jwk2pem } from 'pem-jwk';
 import { verify as jwtVerify } from 'jsonwebtoken';
 
-import type { JWKpem } from '@oada/certs/dist/jwks-utils';
 import { jwksUtils as jwks } from '@oada/certs';
 
 export interface VerifyOptions {
@@ -38,7 +37,7 @@ export async function verify({
   payload,
 }: VerifyOptions) {
   const jwk = await jwks.jwkForSignature(token, hint);
-  const key = jwk.kty === 'PEM' ? (jwk as JWKpem).pem : jwk2pem(jwk as RSA_JWK);
+  const key = jwk.kty === 'PEM' ? jwk.pem : jwk2pem(jwk as RSA_JWK);
 
   const verifyOptions = {
     issuer,

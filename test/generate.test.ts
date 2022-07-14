@@ -28,6 +28,8 @@ import { decode } from 'jws';
 import { pem2jwk } from 'pem-jwk';
 import { verify } from 'jsonwebtoken';
 
+import type { JWK } from '@oada/certs/dist/jwks-utils';
+
 import { generate } from '../dist';
 
 chai.use(chaiAsPromised);
@@ -41,7 +43,8 @@ describe('generate', () => {
     // eslint-disable-next-line prefer-template, security/detect-non-literal-fs-filename
     pem: fs.readFileSync(__dirname + '/keys/abc123.private.pem').toString(),
   } as const;
-  const privateJwk = { ...pem2jwk(privatePem.pem), kid: 'abc123' };
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  const privateJwk = { ...pem2jwk(privatePem.pem), kid: 'abc123' } as JWK;
   const publicPem = {
     kid: 'abc123',
     kty: 'PEM',

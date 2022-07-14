@@ -27,6 +27,8 @@ import chaiAsPromised from 'chai-as-promised';
 import { pem2jwk } from 'pem-jwk';
 import { sign } from 'jsonwebtoken';
 
+import type { JWK } from '@oada/certs/dist/jwks-utils';
+
 import { verify } from '../';
 
 chai.use(chaiAsPromised);
@@ -46,7 +48,8 @@ describe('verify', () => {
     // eslint-disable-next-line prefer-template, security/detect-non-literal-fs-filename
     pem: fs.readFileSync(__dirname + '/keys/abc123.public.pem').toString(),
   } as const;
-  const publicJwk = { ...pem2jwk(publicPem.pem), kid: 'abc123' };
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  const publicJwk = { ...pem2jwk(publicPem.pem), kid: 'abc123' } as JWK;
   const alg = 'RS256';
   const options = {
     algorithm: alg,
@@ -219,6 +222,7 @@ describe('verify', () => {
   it('should fail if key type not supported', () => {
     const token = sign({}, privatePem.pem, options);
 
+    // @ts-expect-error type intentionally wrong
     publicJwk.kty = '[Unknown]';
     const valid = verify({
       token,

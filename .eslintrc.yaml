@@ -35,7 +35,7 @@ parser: '@typescript-eslint/parser'
 
 parserOptions:
   ecmaVersion: 2020
-  project: './tsconfig.eslint.json'
+  project: './**/tsconfig.*'
 
 overrides:
   - files: '*.ts'
@@ -46,7 +46,7 @@ overrides:
       - prettier
     parserOptions:
       ecmaVersion: 2020
-      project: './tsconfig.eslint.json'
+      project: './**/tsconfig.*'
     rules:
       '@typescript-eslint/naming-convention':
         [
@@ -78,6 +78,16 @@ overrides:
         ]
       '@typescript-eslint/restrict-template-expressions': off
       '@typescript-eslint/no-shadow': warn
+      '@typescript-eslint/no-unused-vars':
+        [
+          warn,
+          {
+            args: after-used,
+            ignoreRestSiblings: true,
+            varsIgnorePattern: '^_',
+            argsIgnorePattern: '^_',
+          },
+        ]
 
 rules:
   notice/notice:
@@ -101,10 +111,8 @@ rules:
          */
       onNonMatchingHeader: append
       nonMatchingTolerance: 0.7
-  unicorn/prefer-node-protocol: off
   sonarjs/no-duplicate-string: [warn, 5]
   sonarjs/cognitive-complexity: warn
-  eslint-comments/no-unused-disable: off
   import/extensions: off
   node/no-unpublished-import: off
   spaced-comment: [error, always, markers: [/, //]]

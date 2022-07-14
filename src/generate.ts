@@ -18,7 +18,6 @@
 import { RSA_JWK, jwk2pem } from 'pem-jwk';
 import { SignOptions, sign } from 'jsonwebtoken';
 
-import type { JWKpem } from '@oada/certs/dist/jwks-utils';
 import { jwksUtils as jwks } from '@oada/certs';
 
 /**
@@ -89,7 +88,7 @@ export async function generate({
     },
   };
 
-  const pem = key.kty === 'PEM' ? (key as JWKpem).pem : jwk2pem(key as RSA_JWK);
+  const pem = key.kty === 'PEM' ? key.pem : jwk2pem(key as RSA_JWK);
 
   return sign(payload, pem, jwtOptions);
 }
