@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-import { RSA_JWK, jwk2pem } from 'pem-jwk';
-import { SignOptions, sign } from 'jsonwebtoken';
+import { type RSA_JWK, jwk2pem } from 'pem-jwk';
+import { type SignOptions, sign } from 'jsonwebtoken';
 
 import { jwksUtils as jwks } from '@oada/certs';
 

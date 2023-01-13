@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/* eslint-disable unicorn/prevent-abbreviations, import/no-commonjs, unicorn/prefer-module */
+/* eslint-disable unicorn/prevent-abbreviations, import/no-commonjs, unicorn/prefer-module, @typescript-eslint/no-var-requires */
 
 const webpack = require('webpack');
 const puppeteer = require('puppeteer');

@@ -39,13 +39,13 @@ describe('verify', () => {
   const privatePem = {
     kid: 'abc123',
     kty: 'PEM',
-    // eslint-disable-next-line prefer-template, security/detect-non-literal-fs-filename
+    // eslint-disable-next-line prefer-template
     pem: fs.readFileSync(__dirname + '/keys/abc123.private.pem').toString(),
   } as const;
   const publicPem = {
     kid: 'abc123',
     kty: 'PEM',
-    // eslint-disable-next-line prefer-template, security/detect-non-literal-fs-filename
+    // eslint-disable-next-line prefer-template
     pem: fs.readFileSync(__dirname + '/keys/abc123.public.pem').toString(),
   } as const;
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions

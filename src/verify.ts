@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { RSA_JWK, jwk2pem } from 'pem-jwk';
+import { type RSA_JWK, jwk2pem } from 'pem-jwk';
 import { verify as jwtVerify } from 'jsonwebtoken';
 
 import { jwksUtils as jwks } from '@oada/certs';
@@ -39,12 +39,25 @@ export async function verify({
   const jwk = await jwks.jwkForSignature(token, hint);
   const key = jwk.kty === 'PEM' ? jwk.pem : jwk2pem(jwk as RSA_JWK);
 
-  const verifyOptions = {
+  const jwtPayload = jwtVerify(token, key, {
     issuer,
     audience: tokenEndpoint,
-  };
-
-  const jwtPayload = jwtVerify(token, key, verifyOptions);
+    // HACK: Avoid vulnerability CVE-2022-23540, CVE-2022-23529
+    algorithms: [
+      'HS256',
+      'HS384',
+      'HS512',
+      'RS256',
+      'RS384',
+      'RS512',
+      'ES256',
+      'ES384',
+      'ES512',
+      'PS256',
+      'PS384',
+      'PS512',
+    ],
+  });
   if (typeof jwtPayload === 'string') {
     throw new TypeError(`Failed to parse payload: ${jwtPayload}`);
   }
