@@ -78,7 +78,7 @@
   "homepage": "https://github.com/OADA/jwt-bearer-client-auth",
   "dependencies": {
     "@oada/certs": "^4.1.1",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "pem-jwk": "^2.0.0",
     "tslib": "^2.4.1"
   },
