@@ -729,15 +729,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node-jose@npm:^1.1.10":
-  version: 1.1.10
-  resolution: "@types/node-jose@npm:1.1.10"
-  dependencies:
-    "@types/node": "*"
-  checksum: a6cfb9fa1c9a748ef3edd461f93f944f853d8e1cde3b8e860662830ae50aa4adc98015754c12dbd41a1e0d1950ac8be6e2e4daaac0cdea59ea084164a382937c
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:*, @types/node@npm:>=10.0.0":
   version: 18.11.18
   resolution: "@types/node@npm:18.11.18"
@@ -5696,7 +5687,6 @@ __metadata:
     "@types/karma-chrome-launcher": ^3.1.1
     "@types/mocha": ^10.0.1
     "@types/node": ^12.20.55
-    "@types/node-jose": ^1.1.10
     "@types/pem-jwk": ^2.0.0
     "@types/prettier": ^2.7.2
     "@types/source-map-support": ^0.5.6
@@ -6734,8 +6724,8 @@ __metadata:
   linkType: hard
 
 "node-jose@npm:^2.1.0":
-  version: 2.1.1
-  resolution: "node-jose@npm:2.1.1"
+  version: 2.2.0
+  resolution: "node-jose@npm:2.2.0"
   dependencies:
     base64url: ^3.0.1
     buffer: ^6.0.3
@@ -6745,8 +6735,8 @@ __metadata:
     node-forge: ^1.2.1
     pako: ^2.0.4
     process: ^0.11.10
-    uuid: ^8.3.2
-  checksum: ae82fa789f3b7df39a2b3070b6ffdcf30b5fd3c03e6c2f056c4a4ed2d11cde7f69a22a7e49fb550c94a90ccac76a8b9a9341864be5c8e14782f3badd052e3d3a
+    uuid: ^9.0.0
+  checksum: ec021aaf12e256a88e0f8504b529d94685b9af774d3009048d4b005294add7735a99ef771f135a0cf6648c2c2c9c82ea4883f1c79b99fe6003b700e67819e24f
   languageName: node
   linkType: hard
 
@@ -9108,6 +9098,15 @@ __metadata:
   bin:
     uuid: dist/bin/uuid
   checksum: 5575a8a75c13120e2f10e6ddc801b2c7ed7d8f3c8ac22c7ed0c7b2ba6383ec0abda88c905085d630e251719e0777045ae3236f04c812184b7c765f63a70e58df
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "uuid@npm:9.0.0"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 8dd2c83c43ddc7e1c71e36b60aea40030a6505139af6bee0f382ebcd1a56f6cd3028f7f06ffb07f8cf6ced320b76aea275284b224b002b289f89fe89c389b028
   languageName: node
   linkType: hard
 
